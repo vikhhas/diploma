@@ -1067,7 +1067,7 @@ def show_nominative_test():
 
     instruction_label = tk.Label(main_win,
                                  text=(
-                                     "Інструкція: Вам подаається слово у формі однини або множини називного відмінка. "
+                                     "Інструкція: Вам подається слово у формі однини або множини називного відмінка (kto? co?). "
                                      "Оберіть правильну форму називного відмінка."
                                  ),
                                  font=("Montserrat", 12), bg="#f4f6f8", padx=10)
@@ -1311,6 +1311,16 @@ CASE_LABELS = {
     'L': 'місцевого відмінка',
     'V': 'кличного відмінка'
 }
+
+CASE_QUESTION_MAP = {
+    ("sgN", "plN"): "kto? co?",
+    ("sgG", "plG"): "kogo? czego?",
+    ("sgD", "plD"): "komu? czemu?",
+    ("sgA", "plA"): "kogo? co?",
+    ("sgI", "plI"): "kim? czym?",
+    ("sgL", "plL"): "o kim? o czym?",
+    ("sgV", "plV"): "hej!"
+}
 #допоміжні ф-ції
 def make_opts(correct, forms):
     pool = [f for f in set(forms) if f and f != correct]
@@ -1418,21 +1428,24 @@ def generate_case_questions(case_code):
             })
     random.shuffle(yn_questions)
 
-    #Тип 3: Вільний ввід
+    # Тип 3: Вільний ввід
     text_questions = []
-    #2 питання на однину
+    key_tuple = (f"sg{case_code}", f"pl{case_code}")
+    question_prompt = CASE_QUESTION_MAP.get(key_tuple, "")
+
+    # 2 питання на однину
     for _ in range(2):
         row = fetch_random_row_full()
         if not row:
             continue
-        #якщо називний однини пустий, беремо називний множини
         base = row['sgN'] if row['sgN'] else row['plN']
         text_questions.append({
             'base': base,
-            'num': f"форму однини {case_label}",
+            'num': f"форму однини {case_label} ({question_prompt})",
             'ans': row['sg' + case_code]
         })
-    #2 питання на множину
+
+    # 2 питання на множину
     for _ in range(2):
         row = fetch_random_row_full()
         if not row:
@@ -1440,10 +1453,9 @@ def generate_case_questions(case_code):
         base = row['sgN'] if row['sgN'] else row['plN']
         text_questions.append({
             'base': base,
-            'num': f"форму множини {case_label}",
+            'num': f"форму множини {case_label} ({question_prompt})",
             'ans': row['pl' + case_code]
         })
-
     return questions, yn_questions, text_questions
 
 def render_test(case_ua, case_code, main_win, questions, yn_questions, text_questions):
@@ -1453,15 +1465,14 @@ def render_test(case_ua, case_code, main_win, questions, yn_questions, text_ques
               font=("Montserrat",12)).pack(anchor='nw', pady=10, padx=10)
     tk.Label(main_win, text=f"Тест: {case_ua} відмінок",
              font=("Montserrat",16,'bold'), bg="#f4f6f8").pack(pady=(20,5))
-
+    question_pair = CASE_QUESTION_MAP.get(('sg' + case_code, 'pl' + case_code), '')
     instr = tk.Label(main_win,
                      text=(
                          "Інструкція:\n"
-                         f"Питання 1–4. Для кожного слова в називному відмінку однини оберіть правильну форму {CASE_LABELS[case_code]}.\n"
+                         f"Питання 1–4. Для кожного слова в називному відмінку однини оберіть правильну форму {CASE_LABELS[case_code]} ({question_pair}).\n"
                          "Питання 5–8. Для кожної словоформи натисніть «Так», якщо вона відповідає питанню, або «Ні» — якщо ні.\n"
                          "Питання 9–12. Введіть у поле правильну словоформу польською. За потреби використовуйте діакритичні символи.\n"
-                         "Кожне питання дає 1 бал."
-                     ),
+                         "Кожне питання дає 1 бал."),
                      font=("Montserrat",12), bg="#f4f6f8",
                      wraplength=700, justify="left")
     instr.pack(pady=(0,20), padx=20)
