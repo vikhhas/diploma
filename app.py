@@ -41,7 +41,7 @@ def update_user_stats(case_code, correct, total):
         return
     user_id = row[0]
 
-    #чи вже є запис для цього падежу
+    #чи вже є запис для цього відмінка
     users_cursor.execute(
         "SELECT correct, total FROM stats WHERE user_id=? AND case_code=?",
         (user_id, case_code))
